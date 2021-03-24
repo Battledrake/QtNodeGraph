@@ -1,0 +1,3 @@
+QWidget { background : transparent }
+
+NodeContentWidget QLabel { color: #e0e0e0; }
