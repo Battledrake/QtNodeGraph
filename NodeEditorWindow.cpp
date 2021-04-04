@@ -37,8 +37,8 @@ void NodeEditorWindow::InitUI() {
     pNodeTwo->SetPosition(0, 0);
     pNodeThree->SetPosition(200, -100);
 
-    NodeEdge* pEdge = new NodeEdge(m_pScene, pNodeOne->GetOutputSockets()[0], pNodeTwo->GetInputSockets()[0]);
-    NodeEdge* pEdgeTwo = new NodeEdge(m_pScene, pNodeTwo->GetOutputSockets()[0], pNodeThree->GetInputSockets()[1]);
+//    NodeEdge* pEdge = new NodeEdge(m_pScene, pNodeOne->GetOutputSockets()[0], pNodeTwo->GetInputSockets()[0]);
+//    NodeEdge* pEdgeTwo = new NodeEdge(m_pScene, pNodeTwo->GetOutputSockets()[0], pNodeThree->GetInputSockets()[1]);
 
     //Create graphics view
     m_pGraphView = new NodeGraphicsView(m_pScene->GetGraphicScene(), this);

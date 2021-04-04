@@ -2,8 +2,9 @@
 
 #include <QGraphicsView>
 
-class QGraphicsScene;
+class NodeGraphicsScene;
 class NodeSocket;
+class NodeEdge;
 
 enum class EGraphMode {
     Noop,
@@ -30,19 +31,18 @@ protected:
 
 private:
     void InitUI();
+    void EdgeDragStart(NodeSocket* socket);
+    void EdgeDragEnd();
+
+    //Debugging Function
     QGraphicsItem* GetItemAtClick(QMouseEvent* event);
 
-    QGraphicsScene* m_pGraphScene;
+    NodeGraphicsScene* m_pGraphScene;
     EGraphMode m_currentMode;
+
+    NodeEdge* m_pDragEdge;
 
     NodeSocket* m_pStartSocket;
     NodeSocket* m_pHoveredSocket;
     NodeSocket* m_pEndSocket;
-
-    float zoomInFactor;
-    float zoom;
-    float zoomFactor;
-    float zoomStep;
-    float zoomMin;
-    float zoomMax;
 };

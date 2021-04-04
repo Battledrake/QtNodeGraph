@@ -17,16 +17,21 @@ void Scene::InitUI() {
     m_pGraphScene->SetSceneSize(m_sceneWidth, m_sceneHeight);
 }
 
-void Scene::AddNode(Node node) {
+void Scene::AddNode(Node* node) {
     m_nodes.append(node);
 }
 
-void Scene::AddEdge(NodeEdge edge) {
+void Scene::AddEdge(NodeEdge* edge) {
     m_edges.append(edge);
 }
 
-void Scene::RemoveNode(Node node) {
+void Scene::RemoveNode(Node* node) {
 }
 
-void Scene::RemoveEdge(NodeEdge edge) {
+void Scene::RemoveEdge(NodeEdge* edge) {
+    auto iterator = std::find(m_edges.begin(), m_edges.end(), edge);
+    if(iterator != m_edges.end()) {
+        m_edges.erase(iterator);
+        delete edge;
+    }
 }

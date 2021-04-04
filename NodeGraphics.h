@@ -10,7 +10,7 @@ class NodeContentWidget;
 class NodeGraphics : public QGraphicsItem
 {
 public:
-    NodeGraphics(Node* node, QGraphicsItem* parent=NULL);
+    NodeGraphics(Node* node, QGraphicsItem* parent=nullptr);
 
     inline const char* GetNodeTitle() { return m_szTitle; }
     inline float GetTitleHeight() { return m_titleHeight; }
@@ -21,8 +21,6 @@ public:
     void SetTitle(const char* title);
 
 protected:
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-
     virtual QRectF boundingRect() const override;
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* style, QWidget* widget=nullptr) override;
 

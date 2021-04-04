@@ -8,6 +8,7 @@ class NodeGraphicsScene : public QGraphicsScene {
 public:
     NodeGraphicsScene(Scene* scene, QObject* parent = nullptr);
 
+    inline Scene* GetScene() { return m_pScene; }
     void SetSceneSize(float width, float height);
 
 protected:

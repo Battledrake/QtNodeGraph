@@ -7,7 +7,7 @@
 NodeSocket::NodeSocket(Node* node, int index, ESocketRegion region)
 {
     m_pNode = node;
-    m_pEdge = NULL;
+    m_pEdge = nullptr;
     m_index = index;
     m_socketRegion = region;
     m_pSocketGraphic = new NodeSocketGraphic(this, (QGraphicsItem*)m_pNode->GetNodeGraphics());
@@ -16,6 +16,5 @@ NodeSocket::NodeSocket(Node* node, int index, ESocketRegion region)
 }
 
 void NodeSocket::DeleteEdge() {
-    delete m_pEdge;
-    m_pEdge = NULL;
+    m_pEdge = nullptr;
 }

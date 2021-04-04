@@ -29,6 +29,7 @@ Node::Node(Scene* scene, const char* title, int nodeIndex) {
         pGraphicsScene->addItem(m_pGraphicsNode);
     }
 
+    m_pScene->AddNode(this);
 }
 
 void Node::SetPosition(int x, int y) {

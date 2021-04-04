@@ -17,14 +17,13 @@ class NodeSocket
 {
 
 public:
-    NodeSocket(Node* scene, int index, ESocketRegion position=ESocketRegion::LeftTop);
+    NodeSocket(Node* scene, int index, ESocketRegion region=ESocketRegion::LeftTop);
 
     inline NodeSocketGraphic* GetSocketGraphic() { return m_pSocketGraphic; }
     inline NodeEdge* GetEdge() { return m_pEdge; }
     void SetEdge(NodeEdge* edge) { m_pEdge = edge; }
     inline Node* GetNode() { return m_pNode; }
 
-    void SetConnectedEdge(NodeEdge* edge);
     void DeleteEdge();
 
 private:

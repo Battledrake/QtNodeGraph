@@ -23,6 +23,7 @@ NodeEdge::NodeEdge(Scene* scene, NodeSocket* startSocket, NodeSocket* endSocket)
 
     UpdatePositions();
     m_pScene->GetGraphicScene()->addItem(m_pEdgeGraphics);
+    m_pScene->AddEdge(this);
 }
 
 void NodeEdge::UpdatePositions() {
@@ -30,15 +31,22 @@ void NodeEdge::UpdatePositions() {
 
     if(m_pEndSocket) {
         m_pEdgeGraphics->SetDestPos(m_pEndSocket->GetSocketGraphic()->scenePos());
+    } else {
+        m_pEdgeGraphics->SetDestPos(m_pStartSocket->GetSocketGraphic()->scenePos());
     }
     m_pEdgeGraphics->update();
 }
 
+void NodeEdge::SetEndSocket(NodeSocket *socket) {
+    socket->SetEdge(this);
+    m_pEndSocket = socket;
+}
+
 void NodeEdge::RemoveFromSockets() {
-    if(!m_pStartSocket) {
+    if(m_pStartSocket) {
         m_pStartSocket->DeleteEdge();
     }
-    if(!m_pEndSocket) {
+    if(m_pEndSocket) {
         m_pEndSocket->DeleteEdge();
     }
 }
@@ -46,16 +54,5 @@ void NodeEdge::RemoveFromSockets() {
 NodeEdge::~NodeEdge() {
     RemoveFromSockets();
 
-    delete m_pStartSocket;
-    m_pStartSocket = NULL;
-
-    delete m_pEndSocket;
-    m_pEndSocket = NULL;
-
     m_pScene->GetGraphicScene()->removeItem(m_pEdgeGraphics);
-
-    delete m_pEdgeGraphics;
-    m_pEdgeGraphics = NULL;
-
-    m_pScene->RemoveEdge(*this);
 }

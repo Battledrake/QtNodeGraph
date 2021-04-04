@@ -12,6 +12,9 @@ public:
 
     inline NodeSocket* GetStartSocket() { return m_pStartSocket; }
     inline NodeSocket* GetEndSocket() { return m_pEndSocket; }
+    inline NodeEdgeGraphic* GetEdgeGraphic() { return m_pEdgeGraphics; }
+
+    void SetEndSocket(NodeSocket* socket);
 
     void UpdatePositions();
     void RemoveFromSockets();

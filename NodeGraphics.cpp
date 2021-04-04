@@ -70,13 +70,6 @@ void NodeGraphics::InitUI() {
     this->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }
 
-void NodeGraphics::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    QGraphicsItem::mouseMoveEvent(event);
-    if(m_pNode) {
-        m_pNode->UpdateConnectedEdges();
-    }
-}
-
 void NodeGraphics::SetTitle(const char* title) {
     m_szTitle = title;
     m_pTitleItem->setPlainText(m_szTitle);

@@ -3,6 +3,11 @@
 #include "NodeSocketGraphic.h"
 #include "NodeSocket.h"
 #include "Node.h"
+#include "NodeGraphicsScene.h"
+#include "NodeScene.h"
+#include "NodeEdge.h"
+#include "NodeEdgeGraphic.h"
+#include "NodeGraphics.h"
 
 #include <QGraphicsRectItem>
 #include <QPushButton>
@@ -10,23 +15,19 @@
 #include <QGraphicsProxyWidget>
 #include <QPainter>
 
+#define DEBUG
+
 NodeGraphicsView::NodeGraphicsView(QGraphicsScene* graphScene, QWidget* parent)
     : QGraphicsView(graphScene, parent) {
 
-    m_pGraphScene = graphScene;
+    m_pGraphScene = static_cast<NodeGraphicsScene*>(graphScene);
     m_currentMode = EGraphMode::Noop;
 
-    m_pStartSocket = NULL;
-    m_pHoveredSocket = NULL;
-    m_pEndSocket = NULL;
+    m_pStartSocket = nullptr;
+    m_pHoveredSocket = nullptr;
+    m_pEndSocket = nullptr;
 
     InitUI();
-
-    zoomInFactor = 1.25f;
-    zoom = 10.0f;
-    zoomStep = 1.0f;
-    zoomMin = 0.0f;
-    zoomMax = 10.0f;
 }
 
 void NodeGraphicsView::InitUI() {
@@ -39,8 +40,26 @@ void NodeGraphicsView::InitUI() {
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    this->setCacheMode(QGraphicsView::CacheBackground);
+
+    this->setDragMode(QGraphicsView::RubberBandDrag);
 
     this->centerOn(QPointF(0.0f, 0.0f));
+}
+
+void NodeGraphicsView::EdgeDragStart(NodeSocket* socket) {
+    m_pDragEdge = new NodeEdge(m_pGraphScene->GetScene(), socket, nullptr);
+}
+
+void NodeGraphicsView::EdgeDragEnd() {
+    if(m_pHoveredSocket) {
+        if(m_pDragEdge) {
+            m_pDragEdge->SetEndSocket(m_pHoveredSocket);
+        }
+    } else {
+        m_pGraphScene->GetScene()->RemoveEdge(m_pDragEdge);
+        m_pDragEdge = nullptr;
+    }
 }
 
 void NodeGraphicsView::mousePressEvent(QMouseEvent* mouseEvent) {
@@ -61,7 +80,17 @@ void NodeGraphicsView::mousePressEvent(QMouseEvent* mouseEvent) {
 }
 
 void NodeGraphicsView::mouseMoveEvent(QMouseEvent* mouseEvent) {
-    QGraphicsView::mouseMoveEvent(mouseEvent);
+    if(m_currentMode == EGraphMode::EdgeDrag) {
+        QPointF pos = this->mapToScene(mouseEvent->pos());
+        m_pDragEdge->GetEdgeGraphic()->SetDestPos(pos);
+        m_pDragEdge->GetEdgeGraphic()->update();
+    }
+
+    for(Node* pNode : m_pGraphScene->GetScene()->GetNodes()) {
+        if(pNode->GetNodeGraphics()->isSelected()) {
+            pNode->UpdateConnectedEdges();
+        }
+    }
 
     QList<QGraphicsItem*> items = this->items(mouseEvent->pos());
     for(auto& item : items) {
@@ -80,9 +109,10 @@ void NodeGraphicsView::mouseMoveEvent(QMouseEvent* mouseEvent) {
     if(items.isEmpty()) {
         if(m_pHoveredSocket) {
             m_pHoveredSocket->GetSocketGraphic()->NodeExited();
-            m_pHoveredSocket = NULL;
+            m_pHoveredSocket = nullptr;
         }
     }
+    QGraphicsView::mouseMoveEvent(mouseEvent);
 }
 
 void NodeGraphicsView::mouseReleaseEvent(QMouseEvent* mouseEvent) {
@@ -117,14 +147,24 @@ void NodeGraphicsView::middleMouseButtonPress(QMouseEvent* mouseEvent) {
 }
 
 void NodeGraphicsView::leftMouseButtonPress(QMouseEvent* mouseEvent) {
+    if(mouseEvent->modifiers() & Qt::ShiftModifier) {
+        mouseEvent->ignore();
+        QMouseEvent* fakeEvent = new QMouseEvent(mouseEvent->type(), mouseEvent->localPos(), mouseEvent->screenPos(),
+                                                 Qt::LeftButton, mouseEvent->buttons() | Qt::LeftButton,
+                                                 mouseEvent->modifiers() | Qt::ControlModifier);
+        QGraphicsView::mousePressEvent(fakeEvent);
+        return;
+    }
+
     if(NodeSocketGraphic* pGraphic = dynamic_cast<NodeSocketGraphic*>(GetItemAtClick(mouseEvent))) {
         if(NodeSocket* pSocket = pGraphic->GetSocket()) {
-            //        qDebug(pSocketGraphic->GetSocket()->GetNode()->GetNodeTitle());
             if(m_currentMode == EGraphMode::Noop) {
                 m_currentMode = EGraphMode::EdgeDrag;
+#ifdef DEBUG
                 qDebug("Start Dragging Edge");
-                //TODO: assign Start Socket
+#endif
                 m_pStartSocket = pSocket;
+                EdgeDragStart(pSocket);
                 return;
             }
         }
@@ -134,19 +174,60 @@ void NodeGraphicsView::leftMouseButtonPress(QMouseEvent* mouseEvent) {
 
 void NodeGraphicsView::rightMouseButtonPress(QMouseEvent* mouseEvent) {
     QGraphicsView::mousePressEvent(mouseEvent);
+
+#ifdef DEBUG
+    if(QGraphicsItem* item = this->GetItemAtClick(mouseEvent)) {
+        if(NodeSocketGraphic* pSocketGraphic = dynamic_cast<NodeSocketGraphic*>(item)) {
+            if(NodeSocket* pSocket = pSocketGraphic->GetSocket()) {
+                qDebug("RMB DEBUG: Socket: %p has Edge: %p", pSocket, pSocket->GetEdge());
+                return;
+            }
+        }
+        if(NodeEdgeGraphic* pEdgeGraphic = dynamic_cast<NodeEdgeGraphic*>(item)) {
+            if(NodeEdge* pEdge = pEdgeGraphic->GetEdge()) {
+                qDebug("RMB DEBUG: Edge: %p connecting Sockets: %p <--> %p", pEdge,
+                       pEdge->GetStartSocket(), pEdge->GetEndSocket());
+            }
+        }
+    } else {
+        qDebug("SCENE:");
+        qDebug(" Nodes:");
+        for(auto& node : m_pGraphScene->GetScene()->GetNodes()) {
+            qDebug("Node: %p", node);
+        }
+        qDebug(" Edges:");
+        for(auto& edge : m_pGraphScene->GetScene()->GetEdges()) {
+            qDebug("Edge: %p", edge);
+        }
+    }
+#endif
 }
 
 void NodeGraphicsView::middleMouseButtonRelease(QMouseEvent* mouseEvent) {
+
     QMouseEvent* fakeRelease = new QMouseEvent(mouseEvent->type(), mouseEvent->localPos(),
                                                mouseEvent->screenPos(), Qt::LeftButton,
                                                mouseEvent->buttons(), mouseEvent->modifiers());
     QGraphicsView::mouseReleaseEvent(fakeRelease);
-    this->setDragMode(QGraphicsView::NoDrag);
+    this->setDragMode(QGraphicsView::RubberBandDrag);
 }
 
 void NodeGraphicsView::leftMouseButtonRelease(QMouseEvent* mouseEvent) {
+
+    if(mouseEvent->modifiers() & Qt::ShiftModifier) {
+        mouseEvent->ignore();
+        QMouseEvent* fakeEvent = new QMouseEvent(mouseEvent->type(), mouseEvent->localPos(), mouseEvent->screenPos(),
+                                                 Qt::LeftButton, Qt::NoButton,
+                                                 mouseEvent->modifiers() | Qt::ControlModifier);
+        QGraphicsView::mouseReleaseEvent(fakeEvent);
+        return;
+    }
+
     if(m_currentMode == EGraphMode::EdgeDrag) {
+#ifdef DEBUG
         qDebug("End Dragging");
+#endif
+        EdgeDragEnd();
         if(NodeSocketGraphic* pGraphic = dynamic_cast<NodeSocketGraphic*>(GetItemAtClick(mouseEvent))) {
             if(NodeSocket* pSocket = pGraphic->GetSocket()) {
                 qDebug(pSocket->GetNode()->GetNodeTitle());
@@ -156,11 +237,11 @@ void NodeGraphicsView::leftMouseButtonRelease(QMouseEvent* mouseEvent) {
         m_currentMode = EGraphMode::Noop;
         if(m_pStartSocket) {
             m_pStartSocket->GetSocketGraphic()->NodeExited();
-            m_pStartSocket = NULL;
+            m_pStartSocket = nullptr;
         }
         if(m_pHoveredSocket) {
             m_pHoveredSocket->GetSocketGraphic()->NodeExited();
-            m_pHoveredSocket = NULL;
+            m_pHoveredSocket = nullptr;
         }
         return;
     }
@@ -178,20 +259,27 @@ QGraphicsItem* NodeGraphicsView::GetItemAtClick(QMouseEvent* event) {
 }
 
 void NodeGraphicsView::wheelEvent(QWheelEvent* wheelEvent) {
-    //TODO: Something is wrong with the zoom. It causes lots of lag!
 
-    //Calculate zoom factor
-    float zoomOutFactor = 1 / zoomInFactor;
+    QPoint delta = wheelEvent->angleDelta();
 
-    //calculate zoom
-    if(wheelEvent->angleDelta().y() > 0.0f) {
-        zoomFactor = zoomInFactor;
-        zoom += zoomStep;
-    } else {
-        zoomFactor = zoomOutFactor;
-        zoom -= zoomStep;
+    if(delta.y() == 0.0f) {
+        wheelEvent->ignore();
+        return;
     }
 
-    //set screen scale
+    float const step = 1.2f;
+    float zoomFactor;
+    QTransform currentTransform = transform();
+
+    if(delta.y() > 0.0f) {
+        if(currentTransform.m11() > 2.0f)
+            return;
+        zoomFactor = std::pow(step, 1.0);
+    } else {
+        if(currentTransform.m11() < 0.5f)
+            return;
+        zoomFactor = std::pow(step, -1.0);
+    }
+
     scale(zoomFactor, zoomFactor);
 }
