@@ -13,7 +13,7 @@ enum class ESocketRegion;
 class Node {
 
 public:
-    Node(Scene* scene, const char* title="Undefined Node", int nodeIndex=-1);
+    Node(Scene* scene, const char* title="Undefined Node");
 
     void SetPosition(int x, int y);
 

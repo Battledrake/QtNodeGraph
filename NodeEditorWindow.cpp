@@ -29,9 +29,9 @@ void NodeEditorWindow::InitUI() {
     //Create graphics scene
     m_pScene = new Scene();
 
-    Node* pNodeOne = new Node(m_pScene, "Swear On Me Mum", 0);
-    Node* pNodeTwo = new Node(m_pScene, "I'm the twin", 1);
-    Node* pNodeThree = new Node(m_pScene, "Triplets? WTF!", 2);
+    Node* pNodeOne = new Node(m_pScene, "Swear On Me Mum");
+    Node* pNodeTwo = new Node(m_pScene, "I'm the twin");
+    Node* pNodeThree = new Node(m_pScene, "Triplets? WTF!");
 
     pNodeOne->SetPosition(-200, -100);
     pNodeTwo->SetPosition(0, 0);

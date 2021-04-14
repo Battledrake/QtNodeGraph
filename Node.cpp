@@ -7,8 +7,7 @@
 #include "NodeSocketGraphic.h"
 #include "NodeEdge.h"
 
-Node::Node(Scene* scene, const char* title, int nodeIndex) {
-    m_nodeIndex = nodeIndex;
+Node::Node(Scene* scene, const char* title) {
     m_pScene = scene;
     m_szTitle = title;
 
